@@ -1,4 +1,4 @@
-crewai==1.15.14
+crewai[google-genai]==1.15.14
 crewai-tools==1.15.14
 chromadb==1.1.1
 pydantic==2.12.5
