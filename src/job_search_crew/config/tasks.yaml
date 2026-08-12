@@ -1,0 +1,128 @@
+research_task:
+  description: >
+    User ye job dhoond raha hai: "{job_title}" in "{location}".
+    Is job title se related current, relevant listings dhoondo. Har listing
+    ke liye company naam, key requirements, salary range (agar mile), aur
+    ZAROORI: har listing ke sath uska ASAL POSTING URL/LINK bhi do, taake
+    candidate khud verify kar sake ke job real hai. Agar tumhare paas sirf
+    demo/placeholder tool hai (real search available nahi), to apne output
+    ke bilkul shuru mein "[DEMO DATA — NOT REAL LISTINGS]" clearly likho.
+    Write entirely in English.
+  expected_output: >
+    A clear disclaimer at the top stating whether this is real or demo data,
+    followed by 3-5 relevant job listings, each with company name, key
+    requirements, and a posting URL/link.
+  agent: job_researcher
+
+analysis_task:
+  description: >
+    Job Researcher ki di hui listings ko deeply analyze karo. Common
+    required skills, experience level, aur hidden/implied requirements
+    nikalo jo saari listings mein common hain. Write entirely in English.
+  expected_output: >
+    A structured summary: required technical skills, soft skills,
+    experience level, and what the candidate should highlight
+  agent: job_analyzer
+  context:
+    - research_task
+
+resume_task:
+  description: >
+    User ka background/original CV ye hai: "{user_background}".
+    Job Analyzer ke analysis ke hisab se, ye CV ko REWRITE karo — ek poori
+    updated version banao jo job requirements se match kare. Apna output
+    is EXACT structure mein do:
+
+    ## ORIGINAL CV SUMMARY
+    (original CV ka bohot chota summary, 2-3 lines)
+
+    ## CHANGES MADE
+    (bullet list — kya specific cheezein change/add ki gayi hain aur kyun)
+
+    ## UPDATED CV
+    (poori naya, rewritten CV text — professional summary + tailored bullet
+    points, ATS-friendly, ready to use)
+
+    Write entirely in English.
+  expected_output: >
+    A response with three clearly marked sections: ORIGINAL CV SUMMARY,
+    CHANGES MADE, and UPDATED CV (the full rewritten resume text)
+  agent: resume_agent
+  context:
+    - analysis_task
+
+cover_letter_task:
+  description: >
+    Resume Agent ki UPDATED CV (nahi ke original) aur job analysis ko
+    combine karke, ek personalized cover letter likho (250-300 words) jo
+    user ke background ko target job requirements se connect kare.
+    Write entirely in English.
+  expected_output: >
+    A complete, professional cover letter in English
+  agent: cover_letter_agent
+  context:
+    - analysis_task
+    - resume_task
+
+interview_prep_task:
+  description: >
+    Job analysis ke hisab se, is role ke liye 5 likely interview questions
+    aur har ek ka ek strong sample answer approach (STAR method use karte
+    hue) tayyar karo. Write entirely in English.
+  expected_output: >
+    5 interview questions, each with an answer strategy
+  agent: interview_prep_agent
+  context:
+    - analysis_task
+
+application_task:
+  description: >
+    Research Task ki listings mein se SABSE ZYADA MATCHING job chuno (job
+    analysis ke hisab se). Us ek job ke liye ek complete application DRAFT
+    tayyar karo is structure mein:
+
+    ## TARGET JOB
+    (company name, job title, aur posting URL jo tumne research mein diya tha)
+
+    ## APPLICATION SUMMARY
+    (2-3 sentences — kyun ye candidate is job ke liye sahi hai)
+
+    ## RESUME TO ATTACH
+    (Resume Agent ki UPDATED CV se reference — sirf "see updated resume above")
+
+    ## COVER LETTER TO ATTACH
+    (Cover Letter Agent ke letter se reference — sirf "see cover letter above")
+
+    ## NEXT STEPS FOR CANDIDATE (IMPORTANT)
+    Clearly likho: "This is a DRAFT only. Please review everything above
+    carefully, fill in your personal contact details, and submit this
+    application YOURSELF through the official job posting link. This
+    system does not and will not submit applications automatically."
+
+    Write entirely in English. Tum kabhi ye mat kaho ke application
+    "submit ho gayi" — sirf draft tayyar karo.
+  expected_output: >
+    A complete application draft with target job, summary, references to
+    the resume/cover letter, and a clear human-review reminder
+  agent: application_agent
+  context:
+    - research_task
+    - analysis_task
+    - resume_task
+    - cover_letter_task
+
+review_task:
+  description: >
+    Poori package (resume, cover letter, interview prep, application draft)
+    ko review karo. Check karo kya sab kuch job requirements se consistent
+    hai, aur final improvement suggestions do agar koi cheez missing ho.
+    Write entirely in English.
+  expected_output: >
+    A final quality report: what's good, what should be improved, and an
+    overall readiness score (out of 10)
+  agent: reviewer
+  context:
+    - resume_task
+    - cover_letter_task
+    - interview_prep_task
+    - application_task
