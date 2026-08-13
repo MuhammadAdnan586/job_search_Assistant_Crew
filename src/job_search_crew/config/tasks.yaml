@@ -1,17 +1,23 @@
 research_task:
   description: >
     User ye job dhoond raha hai: "{job_title}" in "{location}".
-    Is job title se related current, relevant listings dhoondo. Har listing
-    ke liye company naam, key requirements, salary range (agar mile), aur
-    ZAROORI: har listing ke sath uska ASAL POSTING URL/LINK bhi do, taake
-    candidate khud verify kar sake ke job real hai. Agar tumhare paas sirf
-    demo/placeholder tool hai (real search available nahi), to apne output
-    ke bilkul shuru mein "[DEMO DATA — NOT REAL LISTINGS]" clearly likho.
-    Write entirely in English.
+    User ne ye filters bhi specify kiye hain: "{filters_text}".
+    Is job title se related current, relevant listings dhoondo — search_jobs
+    tool call karte waqt job_type, remote_type, experience_level,
+    salary_range, aur posted_date arguments ko in filters ke mutabiq set
+    karo (jo filter specify nahi hua uske liye default 'Any' / 'Any time' /
+    empty string use karo). Har listing ke liye company naam, key
+    requirements, salary range (agar mile), aur ZAROORI: har listing ke
+    sath uska ASAL POSTING URL/LINK bhi do, taake candidate khud verify kar
+    sake ke job real hai. Agar tumhare paas sirf demo/placeholder tool hai
+    (real search available nahi), to apne output ke bilkul shuru mein
+    "[DEMO DATA — NOT REAL LISTINGS]" clearly likho. Write entirely in
+    English.
   expected_output: >
     A clear disclaimer at the top stating whether this is real or demo data,
-    followed by 3-5 relevant job listings, each with company name, key
-    requirements, and a posting URL/link.
+    a note on which filters were applied, followed by 3-5 relevant job
+    listings, each with company name, key requirements, and a posting
+    URL/link.
   agent: job_researcher
 
 analysis_task:

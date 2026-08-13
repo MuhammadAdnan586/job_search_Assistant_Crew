@@ -26,10 +26,10 @@ if not _config_file.exists():
     _config_file.write_text(
         "[theme]\n"
         'base = "dark"\n'
-        'primaryColor = "#6366f1"\n'
-        'backgroundColor = "#0f1116"\n'
-        'secondaryBackgroundColor = "#1a1d27"\n'
-        'textColor = "#f3f4f6"\n'
+        'primaryColor = "#f2a93b"\n'
+        'backgroundColor = "#0a0c10"\n'
+        'secondaryBackgroundColor = "#12151b"\n'
+        'textColor = "#e7eaee"\n'
         'font = "sans serif"\n'
     )
 
@@ -44,91 +44,237 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# ROBUST CUSTOM CSS — force dark look regardless of theme file being picked up
+# FONTS — Space Grotesk (display/mono-technical headers), Inter (body),
+# JetBrains Mono (agent IDs / console labels)
+# ---------------------------------------------------------------------------
+st.markdown(
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&'
+    'family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" '
+    'rel="stylesheet">',
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# ROBUST CUSTOM CSS — "mission control" console theme (charcoal + amber/teal)
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
+    :root {
+        --bg: #0a0c10;
+        --panel: #12151b;
+        --panel-2: #171b23;
+        --border: #232a36;
+        --amber: #f2a93b;
+        --amber-dim: #b9822f;
+        --teal: #2dd6c4;
+        --text: #e7eaee;
+        --text-dim: #8891a1;
+        --danger: #f2545b;
+    }
+
     html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #0f1116 !important;
-        color: #f3f4f6 !important;
+        background-color: var(--bg) !important;
+        color: var(--text) !important;
     }
+    [data-testid="stHeader"] { background-color: transparent !important; }
     [data-testid="stSidebar"] {
-        background-color: #14161f !important;
+        background-color: #0d1015 !important;
+        border-right: 1px solid var(--border);
     }
+    * { font-family: 'Inter', sans-serif; }
     h1, h2, h3, h4, h5, p, span, label, li {
-        color: #f3f4f6 !important;
+        color: var(--text) !important;
     }
 
+    /* ---------- HERO ---------- */
+    .hero-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        color: var(--teal) !important;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
     .hero-title {
-        font-size: 2.4rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #6366f1, #22d3ee);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text) !important;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.3rem;
     }
-    .hero-sub { color: #9ca3af !important; font-size: 1.05rem; margin-bottom: 1.5rem; }
+    .hero-title .accent { color: var(--amber) !important; }
+    .hero-sub { color: var(--text-dim) !important; font-size: 1rem; margin-bottom: 1.6rem; max-width: 640px; }
 
+    /* ---------- PIPELINE STRIP (signature element) ---------- */
+    .pipeline-wrap {
+        display: flex;
+        align-items: center;
+        overflow-x: auto;
+        gap: 0;
+        padding: 1.1rem 0.2rem 1.5rem 0.2rem;
+        margin-bottom: 1.6rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .pipe-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 84px;
+        flex-shrink: 0;
+    }
+    .pipe-node .num {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        color: var(--amber) !important;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.35rem;
+    }
+    .pipe-node .dot {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.05rem;
+        box-shadow: 0 0 0 0 rgba(242,169,59,0);
+        transition: box-shadow .3s ease, border-color .3s ease;
+    }
+    .pipe-node:hover .dot {
+        border-color: var(--amber);
+        box-shadow: 0 0 14px 0 rgba(242,169,59,0.35);
+    }
+    .pipe-node .lbl {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        color: var(--text-dim) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 0.4rem;
+        text-align: center;
+    }
+    .pipe-link {
+        flex: 1;
+        min-width: 18px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--amber-dim), var(--teal));
+        opacity: 0.45;
+        margin: 0 2px 1.6rem 2px;
+        position: relative;
+        top: -0.9rem;
+    }
+
+    /* ---------- INPUTS ---------- */
     .stTextInput > div > div > input,
     .stTextArea textarea {
-        background-color: #1a1d27 !important;
-        color: #f3f4f6 !important;
-        border: 1px solid #2d3142 !important;
+        background-color: var(--panel) !important;
+        color: var(--text) !important;
+        border: 1px solid var(--border) !important;
         border-radius: 8px !important;
     }
+    .stTextInput > div > div > input:focus {
+        border-color: var(--amber) !important;
+        box-shadow: 0 0 0 1px var(--amber) !important;
+    }
+    label[data-testid="stWidgetLabel"] p {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.78rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-dim) !important;
+    }
 
+    /* ---------- BUTTONS ---------- */
     div.stButton > button:first-child,
     div.stDownloadButton > button:first-child {
-        background: linear-gradient(90deg, #6366f1, #4f46e5);
-        color: white !important;
-        font-weight: 600;
+        background: var(--amber);
+        color: #14161c !important;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
         border-radius: 8px;
         border: none;
         padding: 0.6rem 1.4rem;
         width: 100%;
+        transition: background .2s ease, transform .1s ease;
     }
-    div.stButton > button:first-child:hover {
-        background: linear-gradient(90deg, #4f46e5, #4338ca);
+    div.stButton > button:first-child:hover,
+    div.stDownloadButton > button:first-child:hover {
+        background: #ffc267;
+        transform: translateY(-1px);
     }
 
+    /* ---------- TABS ---------- */
+    button[data-baseweb="tab"] {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.82rem !important;
+        color: var(--text-dim) !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: var(--amber) !important;
+    }
+    [data-baseweb="tab-highlight"] { background-color: var(--amber) !important; }
+
+    /* ---------- AGENT OUTPUT CARDS ---------- */
     .agent-card {
-        background-color: #1a1d27;
-        border: 1px solid #2d3142;
-        border-radius: 12px;
+        background-color: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--teal);
+        border-radius: 10px;
         padding: 1.2rem 1.4rem;
         margin-bottom: 1rem;
-        color: #e5e7eb !important;
+        color: #dfe3e9 !important;
+        line-height: 1.55;
     }
     .agent-badge {
         display: inline-block;
-        background: rgba(99,102,241,0.15);
-        color: #a5b4fc !important;
+        font-family: 'JetBrains Mono', monospace;
+        background: rgba(242,169,59,0.10);
+        color: var(--amber) !important;
         padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 0.75rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
         font-weight: 600;
         margin-bottom: 0.6rem;
+        border: 1px solid rgba(242,169,59,0.25);
     }
+
+    /* ---------- BANNERS ---------- */
     .demo-banner {
-        background: rgba(245, 158, 11, 0.12);
-        border: 1px solid #f59e0b;
-        color: #fbbf24 !important;
+        background: rgba(242, 169, 59, 0.08);
+        border: 1px solid var(--amber-dim);
+        color: #f2c179 !important;
         padding: 0.7rem 1rem;
         border-radius: 8px;
         margin-bottom: 1rem;
         font-size: 0.9rem;
     }
     .review-banner {
-        background: rgba(34, 197, 94, 0.10);
-        border: 1px solid #22c55e;
-        color: #86efac !important;
+        background: rgba(45, 214, 196, 0.08);
+        border: 1px solid var(--teal);
+        color: #8fe9de !important;
         padding: 0.9rem 1.1rem;
         border-radius: 8px;
         margin-bottom: 1rem;
         font-size: 0.92rem;
         font-weight: 600;
     }
-    .footer-note { color: #6b7280 !important; font-size: 0.8rem; text-align: center; margin-top: 2rem; }
+
+    /* ---------- SIDEBAR HEADERS ---------- */
+    [data-testid="stSidebar"] h3 {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 1rem !important;
+    }
+
+    /* ---------- METRICS ---------- */
+    [data-testid="stMetricValue"] {
+        font-family: 'Space Grotesk', sans-serif !important;
+        color: var(--amber) !important;
+    }
+
+    .footer-note { color: #565e6b !important; font-size: 0.78rem; text-align: center; margin-top: 2.2rem; font-family: 'JetBrains Mono', monospace; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -168,14 +314,39 @@ with st.sidebar:
     )
 
 # ---------------------------------------------------------------------------
+# AGENT PIPELINE METADATA (shared by hero strip + result tabs)
+# ---------------------------------------------------------------------------
+AGENTS = [
+    ("01", "🔎", "Researcher"),
+    ("02", "🧭", "Analyzer"),
+    ("03", "📝", "Resume"),
+    ("04", "✉️", "Cover Letter"),
+    ("05", "🎤", "Interview"),
+    ("06", "📨", "Application"),
+    ("07", "✅", "Reviewer"),
+]
+
+# ---------------------------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------------------------
-st.markdown('<div class="hero-title">🎯 Job Search Assistant</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-eyebrow">CrewAI × Gemini · Multi-Agent Pipeline</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">Job Search <span class="accent">Assistant</span></div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="hero-sub">7 AI agents — Research, Analysis, Resume Rewrite, Cover Letter, '
-    'Interview Prep, Application Draft aur Review — ek click mein. All outputs in English.</div>',
+    '<div class="hero-sub">Seven agents run in sequence — from live research to a '
+    'human-reviewed application draft. Nothing is ever auto-submitted.</div>',
     unsafe_allow_html=True,
 )
+
+pipeline_html = '<div class="pipeline-wrap">'
+for i, (num, icon, label) in enumerate(AGENTS):
+    pipeline_html += (
+        f'<div class="pipe-node"><span class="num">{num}</span>'
+        f'<div class="dot">{icon}</div><span class="lbl">{label}</span></div>'
+    )
+    if i < len(AGENTS) - 1:
+        pipeline_html += '<div class="pipe-link"></div>'
+pipeline_html += '</div>'
+st.markdown(pipeline_html, unsafe_allow_html=True)
 
 if not os.getenv("SERPAPI_API_KEY") or os.getenv("SERPAPI_API_KEY") == "your_serpapi_key_yahan":
     st.markdown(
@@ -208,6 +379,42 @@ with col1:
     job_title = st.text_input("Job Title", placeholder="e.g. Python Developer")
 with col2:
     location = st.text_input("Location", placeholder="e.g. Rawalpindi, Pakistan")
+
+with st.expander("🎚️ Filters (optional)"):
+    fcol1, fcol2 = st.columns(2)
+    with fcol1:
+        job_type = st.selectbox(
+            "Job Type", ["Any", "Full-time", "Part-time", "Internship", "Contract"]
+        )
+        experience_level = st.selectbox(
+            "Experience Level", ["Any", "Entry Level", "Mid Level", "Senior Level"]
+        )
+        posted_date = st.selectbox(
+            "Posted Date", ["Any time", "Past 24 hours", "Past week", "Past month"]
+        )
+    with fcol2:
+        remote_type = st.selectbox("Work Mode", ["Any", "Remote", "Onsite", "Hybrid"])
+        salary_range = st.text_input(
+            "Salary Range (optional)", placeholder="e.g. PKR 80,000 - 150,000"
+        )
+
+_filter_badges = []
+if job_type != "Any":
+    _filter_badges.append(f"Job Type: {job_type}")
+if remote_type != "Any":
+    _filter_badges.append(f"Work Mode: {remote_type}")
+if experience_level != "Any":
+    _filter_badges.append(f"Experience: {experience_level}")
+if salary_range.strip():
+    _filter_badges.append(f"Salary: {salary_range.strip()}")
+if posted_date != "Any time":
+    _filter_badges.append(f"Posted: {posted_date}")
+
+filters_text = "; ".join(_filter_badges) if _filter_badges else "No specific filters applied"
+
+if _filter_badges:
+    badges_html = "".join(f'<span class="agent-badge" style="margin-right:6px;">{b}</span>' for b in _filter_badges)
+    st.markdown(f'<div style="margin-bottom:0.8rem;">{badges_html}</div>', unsafe_allow_html=True)
 
 use_cv = st.checkbox(
     "📄 Apni CV upload karke results personalize karein",
@@ -246,7 +453,12 @@ if run_clicked:
     else:
         user_background = f"Candidate applying for {job_title} role in {location}. No CV provided — general profile."
 
-    inputs = {"job_title": job_title, "location": location, "user_background": user_background}
+    inputs = {
+        "job_title": job_title,
+        "location": location,
+        "user_background": user_background,
+        "filters_text": filters_text,
+    }
 
     status_placeholder = st.empty()
     progress = st.progress(5, text="Job Researcher shuru ho raha hai...")
@@ -261,7 +473,9 @@ if run_clicked:
         progress.progress(100, text="Mukammal ho gaya!")
         status_placeholder.success(f"✅ Poora package tayyar hai! ({duration}s)")
 
-        st.session_state.search_history.append(f"{job_title} — {location}")
+        st.session_state.search_history.append(
+            f"{job_title} — {location}" + (f" ({filters_text})" if _filter_badges else "")
+        )
         st.session_state.application_confirmed = False
 
         task_outputs = getattr(crew_output, "tasks_output", None)
@@ -305,7 +519,7 @@ if result:
     contents = result["contents"]
 
     tab_labels = [
-        "🔍 Research", "🧠 Analysis", "📝 Resume (Before/After)",
+        "🔎 Research", "🧭 Analysis", "📝 Resume (Before/After)",
         "✉️ Cover Letter", "🎤 Interview Prep", "📨 Application Draft", "✅ Final Review",
     ]
     keys = ["research", "analysis", "resume", "cover_letter", "interview_prep", "application", "review"]
