@@ -55,20 +55,6 @@ class JobSearchTool(BaseTool):
     )
     args_schema: type[BaseModel] = JobSearchInput
 
-    # Employment type -> SerpAPI Google Jobs "chips" value
-    _EMPLOYMENT_CHIP = {
-        "Full-time": "FULLTIME",
-        "Part-time": "PARTTIME",
-        "Internship": "INTERNSHIP",
-        "Contract": "CONTRACTOR",
-    }
-    # Posted date -> SerpAPI Google Jobs "chips" value
-    _DATE_CHIP = {
-        "Past 24 hours": "today",
-        "Past week": "week",
-        "Past month": "month",
-    }
-
     def _run(
         self,
         job_title: str,
@@ -90,7 +76,15 @@ class JobSearchTool(BaseTool):
 
         # Query text ko relevant filter-words se enrich karo (Google Jobs
         # natural-language matching in inko achay se samajh leta hai).
+        # NOTE: SerpAPI Google Jobs ka "chips" param sirf un exact/hashed
+        # values ko accept karta hai jo khud API pehle response mein deta
+        # hai — free-text guess (jaise "employment_type:FULLTIME") bhejne se
+        # request fail ho jati hai aur silently demo data pe fallback ho
+        # jata hai. Isliye hum filters ko chips ki bajaye search query mein
+        # natural keywords ki tarah shamil karte hain — ye zyada reliable hai.
         query_parts = [job_title, location]
+        if job_type and job_type != "Any":
+            query_parts.append(job_type)
         if remote_type and remote_type != "Any":
             query_parts.append(remote_type)
         if experience_level and experience_level != "Any":
@@ -103,32 +97,37 @@ class JobSearchTool(BaseTool):
                 import requests
 
                 url = "https://serpapi.com/search"
-                params = {
-                    "engine": "google_jobs",
-                    "q": query,
-                    "api_key": api_key,
-                }
 
-                chips = []
-                if job_type in self._EMPLOYMENT_CHIP:
-                    chips.append(f"employment_type:{self._EMPLOYMENT_CHIP[job_type]}")
-                if posted_date in self._DATE_CHIP:
-                    chips.append(f"date_posted:{self._DATE_CHIP[posted_date]}")
-                if chips:
-                    params["chips"] = ",".join(chips)
+                def _fetch(q: str):
+                    params = {"engine": "google_jobs", "q": q, "api_key": api_key}
+                    resp = requests.get(url, params=params, timeout=15)
+                    return resp.json().get("jobs_results", [])
 
-                response = requests.get(url, params=params, timeout=15)
-                data = response.json()
-                jobs = data.get("jobs_results", [])
+                jobs = _fetch(query)
+                used_fallback_query = False
+
+                # Agar filters ke sath query bohot narrow ho gayi aur kuch na
+                # mila, to plain query (sirf job_title + location) try karo —
+                # taake real data milne ke chances barhen filters ke bawajood.
+                base_query = f"{job_title} {location}"
+                if not jobs and query != base_query:
+                    jobs = _fetch(base_query)
+                    used_fallback_query = True
 
                 if not jobs:
                     return (
                         "[DEMO DATA — NOT REAL LISTINGS]\nNo real jobs found via API "
-                        "for this search + filter combination. Falling back to demo "
+                        "for this search (even without filters). Falling back to demo "
                         "listings below.\n" + self._dummy_data(job_title, location, filters)
                     )
 
-                formatted = f"[REAL DATA — via SerpAPI Google Jobs]\nFilters applied: {self._filters_summary(filters)}\n\n"
+                formatted = f"[REAL DATA — via SerpAPI Google Jobs]\nFilters applied (as search keywords): {self._filters_summary(filters)}\n\n"
+                if used_fallback_query:
+                    formatted += (
+                        "Note: filtered search returned no results, so these results are "
+                        "from a broader search without the filter keywords — please check "
+                        "each listing manually against your filters.\n\n"
+                    )
                 for i, job in enumerate(jobs[:5], start=1):
                     apply_link = ""
                     apply_options = job.get("apply_options", [])
@@ -141,12 +140,19 @@ class JobSearchTool(BaseTool):
                         f"   Description snippet: {job.get('description', '')[:200]}\n"
                         f"   Posting URL: {apply_link}\n\n"
                     )
+                notes = []
                 if salary_range.strip():
-                    formatted += (
-                        f"Note: user requested salary range '{salary_range.strip()}' — "
-                        "Google Jobs does not always expose salary data, verify on the "
-                        "posting page itself.\n"
+                    notes.append(
+                        f"user requested salary range '{salary_range.strip()}' — "
+                        "Google Jobs does not always expose salary data, verify on the posting page itself"
                     )
+                if posted_date and posted_date != "Any time":
+                    notes.append(
+                        f"user requested posted-date filter '{posted_date}' — this search source does not "
+                        "reliably support strict date filtering, so check each posting's date manually"
+                    )
+                if notes:
+                    formatted += "Note: " + "; ".join(notes) + ".\n"
                 return formatted
             except Exception as e:
                 return (
