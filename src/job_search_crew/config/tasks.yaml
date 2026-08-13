@@ -6,18 +6,33 @@ research_task:
     tool call karte waqt job_type, remote_type, experience_level,
     salary_range, aur posted_date arguments ko in filters ke mutabiq set
     karo (jo filter specify nahi hua uske liye default 'Any' / 'Any time' /
-    empty string use karo). Har listing ke liye company naam, key
-    requirements, salary range (agar mile), aur ZAROORI: har listing ke
-    sath uska ASAL POSTING URL/LINK bhi do, taake candidate khud verify kar
-    sake ke job real hai. Agar tumhare paas sirf demo/placeholder tool hai
-    (real search available nahi), to apne output ke bilkul shuru mein
-    "[DEMO DATA — NOT REAL LISTINGS]" clearly likho. Write entirely in
-    English.
+    empty string use karo).
+
+    BOHOT ZAROORI RULE — Tool ke output ko HUBAHU (exactly as-is) copy karo:
+    - Tool ka output tumhe [REAL DATA — via SerpAPI Google Jobs] ya
+      [DEMO DATA — NOT REAL LISTINGS] label ke sath deta hai — apne final
+      answer ki bilkul pehli line mein YEHI EXACT label copy karo. Kabhi bhi
+      is label ko khud se change mat karo (jaise agar tool ne REAL DATA diya
+      hai to usay kabhi DEMO likh kar mat dikhao, aur na hi iska ulta).
+    - Sirf wahi companies, job titles, requirements, salary, aur posting
+      URLs use karo jo TOOL NE ASAL MEIN return kiye hain — apni taraf se
+      koi naya/fake company, listing, ya URL kabhi mat banao (hallucinate
+      mat karo), chahe tool ne kam listings (jaise sirf 1 ya 2) hi kyun na
+      di hon. Agar tool sirf 1 real listing deta hai, to sirf wahi 1 listing
+      apne output mein do — 3-5 tak pohanchane ke liye extra fake listings
+      HARGIZ mat jodo.
+    - Har real listing ke sath uska ASAL POSTING URL/LINK bhi copy karo jo
+      tool ne diya tha, taake candidate khud verify kar sake ke job real
+      hai.
+
+    Write entirely in English.
   expected_output: >
-    A clear disclaimer at the top stating whether this is real or demo data,
-    a note on which filters were applied, followed by 3-5 relevant job
-    listings, each with company name, key requirements, and a posting
-    URL/link.
+    A clear disclaimer at the top — copied exactly from the tool's own
+    label (REAL or DEMO) — a note on which filters were applied, followed
+    by however many relevant job listings the tool actually returned
+    (could be 1 to 5 — never invent extra ones to pad the count), each with
+    company name, key requirements, and the exact posting URL/link from the
+    tool.
   agent: job_researcher
 
 analysis_task:
