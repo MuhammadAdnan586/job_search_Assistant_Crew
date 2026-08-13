@@ -1,7 +1,7 @@
 """
 Job Search Assistant Crew — Streamlit UI
 
-Run karne ke liye: streamlit run app.py
+To run: streamlit run app.py
 """
 
 import os
@@ -279,7 +279,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# SESSION STATE — SHORT-TERM MEMORY (isi browser session ki history)
+# SESSION STATE — SHORT-TERM MEMORY (this browser session's history)
 # ---------------------------------------------------------------------------
 if "search_history" not in st.session_state:
     st.session_state.search_history = []
@@ -294,16 +294,15 @@ if "application_confirmed" not in st.session_state:
 with st.sidebar:
     st.markdown("### 🧠 Memory")
     st.caption(
-        "**Short-term:** isi session ki history neeche dikh rahi hai.\n\n"
-        "**Long-term:** CrewAI purane runs ko `crew_memory/` folder mein "
-        "(local ChromaDB) save karta hai, taake future runs behtar context "
-        "ke sath chalein."
+        "**Short-term:** this session's history is shown below.\n\n"
+        "**Long-term:** CrewAI saves past runs in the `crew_memory/` folder "
+        "(local ChromaDB), so future runs benefit from richer context."
     )
     if st.session_state.search_history:
         for i, h in enumerate(reversed(st.session_state.search_history[-5:])):
             st.markdown(f"- {h}")
     else:
-        st.caption("Abhi tak koi search nahi hui is session mein.")
+        st.caption("No search has been run in this session yet.")
 
     st.markdown("---")
     st.markdown("### 🛡️ Guardrails Active")
@@ -350,9 +349,9 @@ st.markdown(pipeline_html, unsafe_allow_html=True)
 
 if not os.getenv("SERPAPI_API_KEY") or os.getenv("SERPAPI_API_KEY") == "your_serpapi_key_yahan":
     st.markdown(
-        '<div class="demo-banner">⚠️ Real job search API (SERPAPI_API_KEY) configured nahi hai — '
-        'job listings DEMO/placeholder data honge, real nahi. .env file mein key add karein '
-        '<a href="https://serpapi.com" style="color:#fbbf24;">serpapi.com</a> se free tier ke liye.</div>',
+        '<div class="demo-banner">⚠️ Real job search API (SERPAPI_API_KEY) is not configured — '
+        'job listings will be DEMO/placeholder data, not real. Add a key to the .env file from '
+        '<a href="https://serpapi.com" style="color:#fbbf24;">serpapi.com</a> for a free tier.</div>',
         unsafe_allow_html=True,
     )
 
@@ -417,18 +416,18 @@ if _filter_badges:
     st.markdown(f'<div style="margin-bottom:0.8rem;">{badges_html}</div>', unsafe_allow_html=True)
 
 use_cv = st.checkbox(
-    "📄 Apni CV upload karke results personalize karein",
+    "📄 Upload your CV to personalize the results",
     value=False,
-    help="CV upload karne se Resume, Cover Letter, Interview Prep, aur Application Draft aapke asal background pe based honge.",
+    help="Uploading a CV means the Resume, Cover Letter, Interview Prep, and Application Draft will be based on your actual background.",
 )
 
 uploaded_cv = None
 if use_cv:
-    uploaded_cv = st.file_uploader("CV Upload Karein (PDF)", type=["pdf"], key="cv_uploader")
+    uploaded_cv = st.file_uploader("Upload CV (PDF)", type=["pdf"], key="cv_uploader")
     if uploaded_cv:
-        st.success(f"✅ '{uploaded_cv.name}' uploaded — search shuru karne ke liye neeche button dabayein.")
+        st.success(f"✅ '{uploaded_cv.name}' uploaded — click the button below to start the search.")
 else:
-    st.caption("CV upload nahi ki — sirf job title/location ke hisab se general results milenge.")
+    st.caption("No CV uploaded — you'll get general results based only on job title/location.")
 
 run_clicked = st.button("🚀 Search & Generate Package")
 
@@ -437,18 +436,18 @@ run_clicked = st.button("🚀 Search & Generate Package")
 # ---------------------------------------------------------------------------
 if run_clicked:
     if not job_title or not location:
-        st.error("Job title aur location dono zaroori hain.")
+        st.error("Job title and location are both required.")
         st.stop()
     if use_cv and uploaded_cv is None:
-        st.error("Aapne CV upload karne ka option chuna hai — pehle PDF upload karein.")
+        st.error("You selected the CV upload option — please upload a PDF first.")
         st.stop()
 
     user_background = ""
     if use_cv:
-        with st.spinner("CV se information nikali ja rahi hai..."):
+        with st.spinner("Extracting information from your CV..."):
             user_background = extract_cv_text(uploaded_cv)
         if not user_background:
-            st.warning("CV se text nahi nikal saka — general results generate ho rahe hain.")
+            st.warning("Couldn't extract text from the CV — generating general results instead.")
             user_background = f"Candidate applying for {job_title} role."
     else:
         user_background = f"Candidate applying for {job_title} role in {location}. No CV provided — general profile."
@@ -461,17 +460,17 @@ if run_clicked:
     }
 
     status_placeholder = st.empty()
-    progress = st.progress(5, text="Job Researcher shuru ho raha hai...")
+    progress = st.progress(5, text="Starting the Job Researcher...")
 
     try:
-        status_placeholder.info("⏳ Pipeline chal rahi hai — 7 agents kaam kar rahe hain, thoda waqt lagega...")
+        status_placeholder.info("⏳ Pipeline running — 7 agents are working, this will take a moment...")
         start_time = time.time()
 
         crew_output = JobSearchCrew().crew().kickoff(inputs=inputs)
 
         duration = round(time.time() - start_time, 1)
-        progress.progress(100, text="Mukammal ho gaya!")
-        status_placeholder.success(f"✅ Poora package tayyar hai! ({duration}s)")
+        progress.progress(100, text="Complete!")
+        status_placeholder.success(f"✅ Your full package is ready! ({duration}s)")
 
         st.session_state.search_history.append(
             f"{job_title} — {location}" + (f" ({filters_text})" if _filter_badges else "")
@@ -505,11 +504,11 @@ if run_clicked:
         progress.empty()
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "quota" in error_msg.lower():
             status_placeholder.error(
-                "⏱️ Gemini API ki free-tier limit is waqt exceed ho gayi hai. "
-                "Kuch minute wait karke dobara try karein."
+                "⏱️ The Gemini API free-tier limit has been exceeded right now. "
+                "Please wait a few minutes and try again."
             )
         else:
-            status_placeholder.error(f"❌ Kuch masla hua: {error_msg}")
+            status_placeholder.error(f"❌ Something went wrong: {error_msg}")
 
 # ---------------------------------------------------------------------------
 # DISPLAY RESULTS (agar available hon)
@@ -532,19 +531,19 @@ if result:
             if key == "application":
                 st.markdown(
                     '<div class="review-banner">🧑‍💻 HUMAN-IN-THE-LOOP CHECKPOINT: '
-                    'Ye ek DRAFT hai. Koi bhi application automatically submit NAHI hui. '
-                    'Neeche poori detail dhyan se check karein, apni contact details fill '
-                    'karein, aur khud official job link pe jakar apply karein.</div>',
+                    'This is a DRAFT. No application has been submitted automatically. '
+                    'Review every detail below carefully, fill in your contact details, '
+                    'and apply yourself via the official job link.</div>',
                     unsafe_allow_html=True,
                 )
                 st.markdown(f'<div class="agent-card">{contents[key]}</div>', unsafe_allow_html=True)
                 st.session_state.application_confirmed = st.checkbox(
-                    "✅ Maine poori application draft carefully review kar li hai aur "
-                    "khud submit karne ke liye ready hoon",
+                    "✅ I have carefully reviewed the full application draft and "
+                    "am ready to submit it myself",
                     value=st.session_state.application_confirmed,
                 )
                 if st.session_state.application_confirmed:
-                    st.success("Confirmed — ab aap official job link pe jakar khud apply kar sakte hain.")
+                    st.success("Confirmed — you can now go to the official job link and apply yourself.")
             else:
                 st.markdown(f'<div class="agent-card">{contents[key]}</div>', unsafe_allow_html=True)
 
@@ -564,9 +563,9 @@ if result:
             c2.metric("Total Tokens", "N/A")
             c3.metric("LLM Calls", "N/A")
         st.caption(
-            "Ye metrics production mein Cost & Latency Optimization ke liye use hoti hain — "
-            "jitne kam tokens/calls, utni kam cost. Detailed step-by-step trace terminal mein "
-            "verbose=True ki wajah se already dikh raha hai (Observability)."
+            "These metrics are used for Cost & Latency Optimization in production — "
+            "fewer tokens/calls means lower cost. A detailed step-by-step trace is "
+            "already visible in the terminal thanks to verbose=True (Observability)."
         )
 
     # -------------------------------------------------------------
@@ -574,7 +573,7 @@ if result:
     # -------------------------------------------------------------
     full_text = "\n\n---\n\n".join(f"# {k.upper()}\n\n{v}" for k, v in contents.items())
     st.download_button(
-        "⬇️ Poora Package Download Karein (.md)",
+        "⬇️ Download Full Package (.md)",
         data=full_text,
         file_name=f"{result['job_title'].replace(' ', '_')}_application_package.md",
         mime="text/markdown",
