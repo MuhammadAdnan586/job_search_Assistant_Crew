@@ -101,7 +101,14 @@ class JobSearchTool(BaseTool):
                 def _fetch(q: str):
                     params = {"engine": "google_jobs", "q": q, "api_key": api_key}
                     resp = requests.get(url, params=params, timeout=15)
-                    return resp.json().get("jobs_results", [])
+                    data = resp.json()
+                    print(f"[JobSearchTool DEBUG] query='{q}' | status={resp.status_code} | "
+                          f"error={data.get('error')} | jobs_found={len(data.get('jobs_results', []))}")
+                    return data.get("jobs_results", [])
+
+                print(f"[JobSearchTool DEBUG] filters received: job_type={job_type!r}, "
+                      f"remote_type={remote_type!r}, experience_level={experience_level!r}, "
+                      f"posted_date={posted_date!r}, salary_range={salary_range!r}")
 
                 jobs = _fetch(query)
                 used_fallback_query = False
@@ -155,6 +162,7 @@ class JobSearchTool(BaseTool):
                     formatted += "Note: " + "; ".join(notes) + ".\n"
                 return formatted
             except Exception as e:
+                print(f"[JobSearchTool DEBUG] EXCEPTION: {type(e).__name__}: {e}")
                 return (
                     f"[DEMO DATA — NOT REAL LISTINGS]\nReal API call failed ({e}). "
                     "Falling back to demo listings below.\n"
