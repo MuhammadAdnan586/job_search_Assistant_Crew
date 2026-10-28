@@ -1,8 +1,8 @@
 # Job Search Assistant Crew
 
-Ek 7-agent multi-agent system (CrewAI + Gemini) — job research se lekar ek
-**human-reviewed application draft** tak, production-grade features
-(memory, guardrails, evaluation, cost tracking) ke sath.
+A 7-agent multi-agent system (CrewAI + Gemini) that goes from job research all the way to a
+**human-reviewed application draft**, with production-grade features
+(memory, guardrails, evaluation, cost tracking).
 
 ## Architecture
 
@@ -10,47 +10,47 @@ Ek 7-agent multi-agent system (CrewAI + Gemini) — job research se lekar ek
 USER (job_title, location, [optional CV])
         |
         v
-  Job Researcher    -> Jobs dhoondta hai + posting URL (ya DEMO disclaimer)
-        |                    [Guardrail: URL/demo-flag required]
+  Job Researcher     -> Finds jobs + posting URL (or a DEMO disclaimer)
+        |                    [Guardrail: URL/demo flag required]
         v
-  Job Analyzer      -> Requirements/skills nikaalta hai
+  Job Analyzer       -> Extracts requirements/skills
         |
         v
-  Resume Agent      -> ORIGINAL CV ko REWRITE karta hai (poora updated CV)
+  Resume Agent       -> REWRITES the ORIGINAL CV (full updated CV)
         |                    [Guardrail: 3 sections required]
         v
-  Cover Letter Agent -> Updated CV se personalized cover letter likhta hai
+  Cover Letter Agent -> Writes a personalized cover letter from the updated CV
         |
         v
-  Interview Prep    -> Likely questions + answer strategy deta hai
+  Interview Prep     -> Provides likely questions + answer strategy
         |
         v
-  Application Agent -> Complete application DRAFT banata hai (kabhi submit nahi karta)
+  Application Agent  -> Creates a complete application DRAFT (never submits)
         |                    [Guardrail: "submitted" claim forbidden]
         v
-  Reviewer          -> Poori package review karta hai, final score deta hai
+  Reviewer           -> Reviews the entire package and gives a final score
         |
         v
   Streamlit UI (tabs + human-review checkpoint + downloadable report)
 ```
 
-## Naye Production Features (Roadmap Phase 4 Se)
+## New Production Features (From Roadmap Phase 4)
 
-| Feature | Kahan Implement Hai |
+| Feature | Where It's Implemented |
 |---|---|
-| **Memory (short + long-term)** | `crew.py` — `memory=True`, ChromaDB `crew_memory/` folder mein local save hota hai. Short-term Streamlit sidebar mein session history ke tor pe dikhta hai. |
-| **Guardrails** | `crew.py` — teen tasks pe `guardrail=` functions (research URL check, resume section check, application "no auto-submit" check). Fail hone pe CrewAI khud retry karta hai. |
-| **Human-in-the-loop** | `app.py` — Application Draft tab mein checkbox jab tak user khud confirm na kare "maine review kar li," aage koi "submit" action nahi hota — is system se **koi application kabhi automatically submit nahi hoti**. |
-| **Evaluation** | Guardrails khud ek evaluation form hain (task success validated before acceptance) — expected_output har task mein evaluation criteria define karta hai. |
-| **Cost & Latency tracking** | `app.py` — "Execution Insights" expander mein duration, token usage, LLM call count dikhta hai. |
-| **Observability** | Terminal mein `verbose=True` se poora agent reasoning trace milta hai; UI mein summary metrics. |
+| **Memory (short + long-term)** | `crew.py` — `memory=True`, ChromaDB is saved locally in the `crew_memory/` folder. Short-term memory is shown in the Streamlit sidebar as session history. |
+| **Guardrails** | `crew.py` — `guardrail=` functions on three tasks (research URL check, resume section check, application "no auto-submit" check). If a guardrail fails, CrewAI retries automatically. |
+| **Human-in-the-loop** | `app.py` — The Application Draft tab has a checkbox; until the user confirms "I have reviewed this," no "submit" action happens. With this system, **no application is ever submitted automatically**. |
+| **Evaluation** | The guardrails are themselves a form of evaluation (task success is validated before acceptance) — the expected_output of each task defines its evaluation criteria. |
+| **Cost & Latency tracking** | `app.py` — The "Execution Insights" expander shows duration, token usage, and LLM call count. |
+| **Observability** | `verbose=True` gives the full agent reasoning trace in the terminal; the UI shows summary metrics. |
 
 ## Tech Stack
 
 - **CrewAI** (agents, tasks, memory, guardrails)
 - **Google Gemini API** (`gemini-3.5-flash-lite`)
 - **Streamlit** — UI
-- **pypdf** — CV (PDF) se text extract karna
+- **pypdf** — extracting text from a CV (PDF)
 - **SerpAPI (optional)** — real, verifiable job listings + URLs
 
 ## Setup (Local)
@@ -62,58 +62,58 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# .env mein apni GEMINI_API_KEY daalein
-# (optional) real job listings ke liye SERPAPI_API_KEY bhi daalein — serpapi.com free tier
+# Add your GEMINI_API_KEY in .env
+# (optional) Also add SERPAPI_API_KEY for real job listings — serpapi.com free tier
 ```
 
-## Run Karna
+## Running
 
 ```bash
 streamlit run app.py
 ```
 
-- Job title + location daalein
-- **CV upload** checkbox — tick karte hi turant PDF uploader dikhega (pehle
-  wala bug fix ho gaya — checkbox ab `st.form` ke bahar hai)
-- Results 7 tabs mein aayenge
-- **Application Draft tab** mein ek clear reminder hai: system kabhi khud
-  apply nahi karta — sirf draft taiyar karta hai, aap khud review kar ke
-  official job link pe jakar apply karte hain
+- Enter a job title + location
+- **Upload CV** checkbox — as soon as you tick it, the PDF uploader appears
+  (the earlier bug is fixed — the checkbox is now outside `st.form`)
+- Results appear in 7 tabs
+- The **Application Draft tab** has a clear reminder: the system never applies
+  on its own — it only prepares a draft, and you review it and apply yourself
+  through the official job link
 
 ## Real vs Demo Job Data
 
-Agar `.env` mein `SERPAPI_API_KEY` nahi hai, app **clearly warn karta hai**
-(orange banner) ke job listings demo/placeholder hain, real nahi — taake
-kabhi bhi galat fehmi na ho ke fake jobs real hain. Real, verifiable
-listings (working links ke sath) ke liye SerpAPI free tier account banayein.
+If `SERPAPI_API_KEY` is not set in `.env`, the app **clearly warns you**
+(orange banner) that the job listings are demo/placeholder data, not real, so
+there is never any confusion that fake jobs are real. To get real, verifiable
+listings (with working links), create a free SerpAPI account.
 
 ## Gemini Rate Limits
 
 Free tier (`gemini-3.5-flash-lite`): 15 requests/minute, 500 requests/day.
-Poori pipeline (7 agents + memory embeddings) ek run mein ~10-12 API calls
-karti hai. Turant baar-baar run karne se per-minute limit hit ho sakti hai —
-UI is error ko friendly message ke sath handle karta hai.
+The full pipeline (7 agents + memory embeddings) makes about 10-12 API calls
+per run. Running it repeatedly in quick succession may hit the per-minute
+limit — the UI handles this error with a friendly message.
 
-## GitHub Pe Push Karna
+## Pushing to GitHub
 
 ```bash
 git init
 git add .
 git commit -m "Job Search Assistant Crew — production features"
 git branch -M main
-git remote add origin https://github.com/<aapka-username>/job-search-crew.git
+git remote add origin https://github.com/<your-username>/job-search-crew.git
 git push -u origin main
 ```
 
-**Zaroori:** `.env` aur `crew_memory/` (agar ban jaye) kabhi push nahi
-honge (`.gitignore` mein hain) — API keys aur local memory secret rakhein.
+**Important:** `.env` and `crew_memory/` (if created) will never be pushed
+(they are in `.gitignore`) — keep your API keys and local memory secret.
 
-## Deploy Karna (Free)
+## Deploying (Free)
 
-**Streamlit Community Cloud:** [share.streamlit.io](https://share.streamlit.io)
-pe GitHub se connect karein, main file `app.py` batayein, "Advanced settings"
-mein `GEMINI_API_KEY` (aur optional `SERPAPI_API_KEY`) secrets ke tor pe
-add karein.
+**Streamlit Community Cloud:** Connect with GitHub at
+[share.streamlit.io](https://share.streamlit.io), set `app.py` as the main file,
+and under "Advanced settings" add `GEMINI_API_KEY` (and optionally
+`SERPAPI_API_KEY`) as secrets.
 
 ## Folder Structure
 
